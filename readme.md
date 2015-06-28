@@ -5,6 +5,11 @@ Talk is a command line utility to compute regions of interest in a 2D image. It 
 objects can be detected by a size range and an aspect ratio. As an output the list of found objects is
 printed.
 
+<img src="tqsrrrqt.jpg"></img>
+<img src="tqsrrrqt_001_meanoff.png"></img>
+<img src="tqsrrrqt_002_focus.png"></img>
+<img src="tqsrrrqt_seg.png"></img>
+
 Help:
 
 ```
