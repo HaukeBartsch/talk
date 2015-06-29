@@ -8,7 +8,9 @@ printed.
 You can download a compiled version of the program, or build from the source code using golang.
 
 * Linux
-   wget https://github.com/HaukeBartsch/talk/raw/master/talk (MacOS)
+   wget https://github.com/HaukeBartsch/talk/raw/master/binary/Linux64/talk
+* MacOS
+   wget https://github.com/HaukeBartsch/talk/raw/master/binary/MacOS/talk
 
 <img title="input image" src="tqsrrrqt.jpg"></img>
 <img title="image after removing the local mean intensities" src="tqsrrrqt_001_meanoff.png"></img>
