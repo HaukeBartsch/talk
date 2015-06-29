@@ -5,6 +5,11 @@ Talk is a command line utility to compute regions of interest in a 2D image. It 
 objects can be detected by a size range and an aspect ratio. As an output the list of found objects is
 printed.
 
+You can download a compiled version of the program, or build from the source code using golang.
+
+* Linux
+   wget https://github.com/HaukeBartsch/talk/raw/master/talk (MacOS)
+
 <img title="input image" src="tqsrrrqt.jpg"></img>
 <img title="image after removing the local mean intensities" src="tqsrrrqt_001_meanoff.png"></img>
 <img title="image after mexican hat filter focused on size range" src="tqsrrrqt_002_focus.png"></img>
