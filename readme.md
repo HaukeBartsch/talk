@@ -84,24 +84,32 @@ maximum allowed aspect ratio of the objects.
 ./talk --verbose segment1 tqsrrrqt.jpg 10 28 3
 >  verbose on
 >  run segment1
->  image size is 256 by 256 pixel
->  min/max: 6477.453700 49578.101300
->  mean size used: 13
->  write out mean removed image tqsrrrqt_001_meanoff.png
+>  image size is 1920 by 1440 pixel
+>  min/max: 4280.566300 61311.770400
+>  mean size used: 16
+>  write out mean removed image HiResHE_001_meanoff.png
 >  invert the image before segmentation
->  focus size used: 1.8
->  write out the focused and inverted image tqsrrrqt_002_focus.png
->  segment1 with size thresholds 10 .. 28, and max aspect ratio of 3
-i: 0, x: 127, y: 253, s: 22, a: 1.1053
-i: 1, x: 154, y: 91, s: 18, a: 1.2857
-i: 2, x: 80, y: 16, s: 21, a: 1.1154
-i: 3, x: 137, y: 113, s: 26, a: 1.7694
+>  focus size used: 2
+>  write out the focused and inverted image HiResHE_002_focus.png
+>  segment1 with size thresholds 25 .. 200, and maximum aspect ratio of 4
+i: 0, x: 817, y: 1346, s: 70, a: 1.1661, c: 0.768491
+i: 1, x: 667, y: 1288, s: 95, a: 1.3367, c: 0.804989
+i: 2, x: 874, y: 1254, s: 81, a: 1.1454, c: 0.826230
 ...
-i: 327, x: 54, y: 187, s: 11, a: 1.6154
-i: 328, x: 226, y: 140, s: 20, a: 2.8534
-i: 329, x: 98, y: 90, s: 12, a: 2.6567
->  write out the found segmentation tqsrrrqt_seg.png
+i: 6592, x: 1613, y: 338, s: 30, a: 1.2899, c: 0.679061
+i: 6593, x: 46, y: 169, s: 29, a: 3.6812, c: 0.889072
+i: 6594, x: 1799, y: 808, s: 30, a: 3.4860, c: 0.859437
+>  write out the found segmentation HiResHE_seg.png
 ```
+
+The returned lines have the following structure for each detected region of interest:
+  * i: index of region
+  * x: x-coordinate of center of mass
+  * y: y-coordinate of center of mass
+  * s: size in pixel for region
+  * a: aspect ratio for region
+  * c: compactness value for region of interest
+
 
 Here an example on how to perform a segmentation using more of the available options:
 
