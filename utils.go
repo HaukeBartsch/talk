@@ -17,8 +17,8 @@ func getMin( img image.Image ) (float64, int, int) {
   minVal := 65536.0
   minx := bounds.Min.X
   miny := bounds.Min.Y
-  for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-    for  x := bounds.Min.X; x < bounds.Max.X; x++ {
+  for  y := bounds.Min.X; y < bounds.Max.X; y++ {
+    for  x := bounds.Min.Y; x < bounds.Max.Y; x++ {
       r,g,b,_ := img.At(x,y).RGBA()
       avg := 0.2125*float64(r) + 0.7154*float64(g) + 0.0721*float64(b)
       // gray := color.Gray{uint8(math.Ceil(avg))}
@@ -38,8 +38,8 @@ func getMax( img image.Image ) (float64,int,int) {
   maxVal := 0.0
   maxx := bounds.Min.X
   maxy := bounds.Min.Y
-  for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-    for  x := bounds.Min.X; x < bounds.Max.X; x++ {
+  for  y := bounds.Min.X; y < bounds.Max.X; y++ {
+    for  x := bounds.Min.Y; x < bounds.Max.Y; x++ {
       r,g,b,_ := img.At(x,y).RGBA()
       avg := 0.2125*float64(r) + 0.7154*float64(g) + 0.0721*float64(b)
       //gray := color.Gray{uint8(math.Ceil(avg))}
@@ -86,8 +86,8 @@ func meanF( img image.Image, disk int ) imageF {
     floatData[i] = make([]float32, dst.Bounds().Max.X-dst.Bounds().Min.X)
   }
   bounds := dst.Bounds()
-  for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-    for  x := bounds.Min.X; x < bounds.Max.X; x++ {
+  for  y := bounds.Min.X; y < bounds.Max.X; y++ {
+    for  x := bounds.Min.Y; x < bounds.Max.Y; x++ {
       pr,_,_,_ := dst.At(x,y).RGBA()
       floatData[x][y] = float32(pr) // 0.2125*float32(pr) + 0.7154*float32(pg) + 0.0721*float32(pb)
     }
@@ -114,8 +114,8 @@ func varianceF( img image.Image, disk int ) (imageF, imageF) {
   for i := range floatData {
     floatData[i] = make([]float32, bounds.Max.X-bounds.Min.X)
   }
-  for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-    for  x := bounds.Min.X; x < bounds.Max.X; x++ {
+  for  y := bounds.Min.X; y < bounds.Max.X; y++ {
+    for  x := bounds.Min.Y; x < bounds.Max.Y; x++ {
       p1r,p1g,p1b,_ := dst.At(x,y).RGBA()
       g1 := 0.2125*float64(p1r) + 0.7154*float64(p1g) + 0.0721*float64(p1b)
       g2 := float64(m[x][y])
@@ -137,8 +137,8 @@ func variance( img image.Image, disk int ) (image.Image, image.Image) {
 
   bounds := img.Bounds()
   dst := image.NewGray(bounds)
-  for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-    for  x := bounds.Min.X; x < bounds.Max.X; x++ {
+  for  y := bounds.Min.X; y < bounds.Max.X; y++ {
+    for  x := bounds.Min.Y; x < bounds.Max.Y; x++ {
       p1r,p1g,p1b,_ := v.At(x,y).RGBA()
       p2r,p2g,p2b,_ := m.At(x,y).RGBA()
       g1 := 0.2125*float64(p1r) + 0.7154*float64(p1g) + 0.0721*float64(p1b)
@@ -156,9 +156,9 @@ func subMean( img image.Image, disk int ) (image.Image) {
 
   bounds := img.Bounds()
 
-  floatData := make([][]float32, bounds.Max.Y-bounds.Min.Y)
+  floatData := make([][]float32, bounds.Max.X-bounds.Min.X)
   for i := range floatData {
-    floatData[i] = make([]float32, bounds.Max.X-bounds.Min.X)
+    floatData[i] = make([]float32, bounds.Max.Y-bounds.Min.Y)
   }
 
   for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
@@ -215,9 +215,9 @@ func focus( img image.Image, s float32 ) (image.Image) {
   large := blur(img,s+onethird)
 
   bounds := img.Bounds()
-  floatData := make([][]float32, bounds.Max.Y-bounds.Min.Y)
+  floatData := make([][]float32, bounds.Max.X-bounds.Min.X)
   for i := range floatData {
-    floatData[i] = make([]float32, bounds.Max.X-bounds.Min.X)
+    floatData[i] = make([]float32, bounds.Max.Y-bounds.Min.Y)
   }
 
   for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
@@ -262,9 +262,9 @@ func whitening( img image.Image, disk int ) (image.Image, image.Image, image.Ima
   mean, vari := varianceF(img, disk)
 
   bounds := img.Bounds()
-  floatData := make([][]float32, bounds.Max.Y-bounds.Min.Y)
+  floatData := make([][]float32, bounds.Max.X-bounds.Min.X)
   for i := range floatData {
-    floatData[i] = make([]float32, bounds.Max.X-bounds.Min.X)
+    floatData[i] = make([]float32, bounds.Max.Y-bounds.Min.Y)
   }
   for  y := bounds.Min.Y; y < bounds.Max.Y; y++ {
     for  x := bounds.Min.X; x < bounds.Max.X; x++ {
@@ -495,8 +495,10 @@ func Hsv(H, S, V float64) color.Color {
 // The selection of thresholds is done based on percentile of pixel above that
 // threshold. That should ensure that many regions close together in luminance get more
 // finely segmented thresholds (makes the procedure faster as well).
+// A value for compactness of -2 indicates that no compactness computation and no
+// filtering by compactness is done, returned values are 0.
 //
-func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, aspectRatioThreshold float64 ) (image.Image) {
+func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, aspectRatioThreshold float64, compactness float64) (image.Image) {
 
   // calculate n quantiles of the cummulative distribution
   quants := []float64{}
@@ -522,7 +524,7 @@ func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, asp
   bounds := img.Bounds()
 
   // lets remember if we have visited a location before
-  vis := make([][]uint8, bounds.Max.Y-bounds.Min.Y)
+  vis := make([][]uint8, bounds.Max.X-bounds.Min.X)
   randGenerator := rand.New(rand.NewSource(99))
   currentLabel  := 0
 
@@ -530,8 +532,8 @@ func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, asp
 
     // reset our visit buffer (we need to visit everything again)
     for i := range vis {
-      vis[i] = make([]uint8, bounds.Max.X-bounds.Min.X)
-      for  j := 0; j < bounds.Max.X-bounds.Min.X; j++ {
+      vis[i] = make([]uint8, bounds.Max.Y-bounds.Min.Y)
+      for  j := 0; j < bounds.Max.Y-bounds.Min.Y; j++ {
         vis[i][j] = 0 // nothing visited yet
       }
     }
@@ -607,6 +609,42 @@ func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, asp
             // start with creating a new label id
             col := Hsv(randGenerator.Float64()*360, 0.8, 0.5)
 
+            // calculate the length of the border
+            compactValue   := 0.0
+            numBorderPixel := 0
+            dismiss := false // memorize if we need to dismiss this region
+            if math.Abs(compactness) <= 2 {
+              for j := range currentSegment {
+                // a pixel is at the border if at least one neighbor is not, count the 4 neighbors
+                found := 0
+                for k := range currentSegment {
+                   posx := currentSegment[k][0]
+                   posy := currentSegment[k][1]
+                   if (currentSegment[j][0] == posx-1 && currentSegment[j][1] == posy  ) ||
+                      (currentSegment[j][0] == posx   && currentSegment[j][1] == posy-1) ||
+                      (currentSegment[j][0] == posx   && currentSegment[j][1] == posy+1) ||
+                      (currentSegment[j][0] == posx+1 && currentSegment[j][1] == posy  ) {
+                      found = found + 1 // this is a neighbor
+                   }
+                }
+                if found < 4 { // we have a border voxel, this point belongs to the contour
+                  numBorderPixel = numBorderPixel + 1
+                }
+              }
+              // compactness between 0..1
+              compactValue = float64(numBorderPixel*numBorderPixel)/(4.0*3.1415927*float64(len(currentSegment)))
+              // we encode smaller or larger than the value given by positive and negative values
+              if compactness < 0 {
+                if compactValue < -compactness {
+                  dismiss = true
+                }
+              } else {
+                if compactValue >= compactness {
+                  dismiss = true
+                }
+              }
+            }
+
             // set back to background
             var centerOfMassX float64 = 0.0
             var centerOfMassY float64 = 0.0
@@ -625,7 +663,7 @@ func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, asp
               currentSegmentZeroMean[k] = []int{ currentSegment[k][0] - int(centerOfMassX), currentSegment[k][1] - int(centerOfMassY) }
             }
 
-            covar := make([][]float64, 2)
+            covar   := make([][]float64, 2)
             covar[0] = make([]float64, 2)
             covar[1] = make([]float64, 2)
             for k := 0; k < 2; k++ {
@@ -646,18 +684,18 @@ func segment1( img image.Image, lowSizeThreshold int, highSizeThreshold int, asp
             // and save the segment as result
             // first read the old locations
             if aspectRatioThreshold < 0 {
-              if L1/L2 > -aspectRatioThreshold {
-                fmt.Printf("i: %d, x: %v, y: %v, s: %v, a: %.4f\n", currentLabel, int(math.Floor(centerOfMassX + .5)), int(math.Floor(centerOfMassY + .5)), len(currentSegment),
-                  L1/L2)
+              if !dismiss && L1/L2 > -aspectRatioThreshold {
+                fmt.Printf("i: %d, x: %v, y: %v, s: %v, a: %.4f, c: %.6f\n", currentLabel, int(math.Floor(centerOfMassX + .5)), int(math.Floor(centerOfMassY + .5)), len(currentSegment),
+                  L1/L2, compactValue)
                 currentLabel = currentLabel + 1
                 for j := range currentSegment {
                    seg.Set(currentSegment[j][0], currentSegment[j][1], col)
                 }
               }
             } else {
-              if L1/L2 <= aspectRatioThreshold {
-                fmt.Printf("i: %d, x: %v, y: %v, s: %v, a: %.4f\n", currentLabel, int(math.Floor(centerOfMassX + .5)), int(math.Floor(centerOfMassY + .5)), len(currentSegment),
-                  L1/L2)
+              if !dismiss && L1/L2 <= aspectRatioThreshold {
+                fmt.Printf("i: %d, x: %v, y: %v, s: %v, a: %.4f, c: %.6f\n", currentLabel, int(math.Floor(centerOfMassX + .5)), int(math.Floor(centerOfMassY + .5)), len(currentSegment),
+                  L1/L2, compactValue)
                 currentLabel = currentLabel + 1
                 for j := range currentSegment {
                    seg.Set(currentSegment[j][0], currentSegment[j][1], col)

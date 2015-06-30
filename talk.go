@@ -6,6 +6,7 @@ import "strconv"
 import "path"
 import "io"
 import "log"
+import "math"
 import "net/http"
 import "github.com/codegangsta/cli"
 
@@ -50,12 +51,17 @@ func main() {
                       "   This command requires four arguments, the file name, minimum number of pixel of valid\n" +
                       "   objects, maximum number of pixel of valid objects and the maximum aspect ratio allowed\n" +
                       "   for a valid object. If the aspect ratio is negative it specifies the minimum allowed\n" +
-                      "   aspect ratio.",
+                      "   aspect ratio. The compactness value prefers more circular objects for smaller values.",
          Flags: []cli.Flag{
            cli.IntFlag {
              Name: "meansize",
              Value: 13,
              Usage: "Size of the region from which the local mean intensity is calculated",
+           },
+           cli.Float64Flag {
+             Name: "compactness",
+             Value: -2.0, // default value that prevents compactness calculation
+             Usage: "Filter by compactness [1..0] defined by P^2/(4 pi A) where A is area and P is perimeter",
            },
            cli.Float64Flag {
              Name: "focussize",
@@ -121,9 +127,17 @@ func main() {
              p(fmt.Sprintf("min/max: %f %f", mmin, mmax))
              d, f  := path.Split(c.Args()[0])
 
-             meanoff := subMean(img, c.Int("meansize"))
+             lST,_ := strconv.ParseInt(c.Args()[1], 0, 32)
+             hST,_ := strconv.ParseInt(c.Args()[2], 0, 32)
+             meansizevalue := c.Int("meansize")
+             if !c.IsSet("meansize") {
+                // we can do better by getting a good mean size (twice radius) based on size range
+                meansizevalue = int(math.Floor(math.Sqrt( (float64(hST))/3.1415927 ) * 2.0 + 0.5))*4
+             }
+
+             meanoff := subMean(img, meansizevalue)
              if verbose {
-                p(fmt.Sprintf("mean size used: %d", c.Int("meansize")))
+                p(fmt.Sprintf("mean size used: %d", meansizevalue))
                 // save the meanoff image
                 fn    := path.Join(d, f[0:len(f)-len(path.Ext(f))] + "_001_meanoff.png")
                 out, err := os.Create(fn)
@@ -135,13 +149,19 @@ func main() {
                 png.Encode(out, meanoff)
                 out.Close()
              }
-             focusI := focus(meanoff,float32(c.Float64("focussize")))
+
+             focussizevalue := c.Float64("focussize")
+             if !c.IsSet("focussize") {
+                focussizevalue = ( math.Sqrt( (float64(lST))/3.1415927 ) * 2.0 ) / 2.0
+             }
+
+             focusI := focus(meanoff,float32(focussizevalue))
              if invert_flag {
                p(fmt.Sprintf("invert the image before segmentation"))
                focusI = invert(focusI)
              }
              if verbose {
-                p(fmt.Sprintf("focus size used: %g", float32(c.Float64("focussize"))))
+                p(fmt.Sprintf("focus size used: %g", float32(focussizevalue)))
                 // save the focussed image
                 fn    := path.Join(d, f[0:len(f)-len(path.Ext(f))] + "_002_focus.png")
                 out, err := os.Create(fn)
@@ -155,13 +175,23 @@ func main() {
              }
 
              // try some segmentation (size threshold from 10 to 28, aspect ration smaller than 3)
-             lST,_ := strconv.ParseInt(c.Args()[1], 0, 32)
-             hST,_ := strconv.ParseInt(c.Args()[2], 0, 32)
              ar,_  := strconv.ParseFloat(c.Args()[3], 64)
              if verbose {
-                p(fmt.Sprintf("segment1 with size thresholds %d .. %d, and max aspect ratio of %g", lST, hST, ar))
+                if ar < 0 {
+                  p(fmt.Sprintf("segment1 with size thresholds %d .. %d, and minimum aspect ratio of %g", lST, hST, ar))
+                } else {
+                  p(fmt.Sprintf("segment1 with size thresholds %d .. %d, and maximum aspect ratio of %g", lST, hST, ar))
+                }
              }
-             seg   := segment1(focusI, int(lST), int(hST), ar)
+             compactness := c.Float64("compactness")
+             if c.IsSet("compactness") && verbose {
+                if compactness > 0 {
+                   p(fmt.Sprintf("compactness filter, values have to be smaller than %g to be compact enough", compactness))
+                } else {
+                   p(fmt.Sprintf("compactness filter, values have to be larger than %g to be less compact", -compactness))
+                }
+             }
+             seg   := segment1(focusI, int(lST), int(hST), ar, compactness)
              fn    := path.Join(d, f[0:len(f)-len(path.Ext(f))] + "_seg.png")
              out, err := os.Create(fn)
              if err != nil {

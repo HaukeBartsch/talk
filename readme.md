@@ -47,14 +47,15 @@ GLOBAL OPTIONS:
    --version, -v	print the version
 ```
 
-Example usage:
+Example
+--------
 
 The segment1 command will normalize the image and sharpen it using a mexican hat filter. Region growing is executed at different threshold levels and for each threshold value a region growing will extract objects that are filtered by min/max size and aspect ratio.
 
 ```
 ./talk segment1 --help
 NAME:
-   segment1 - Detect dark regions in input image with:
+   segment1 - Detect dark regions in the input image with:
          ./talk segment1 tqsrrrqt.jpg 10 28 3
 
 USAGE:
@@ -66,12 +67,13 @@ DESCRIPTION:
    This command requires four arguments, the file name, minimum number of pixel of valid
    objects, maximum number of pixel of valid objects and the maximum aspect ratio allowed
    for a valid object. If the aspect ratio is negative it specifies the minimum allowed
-   aspect ratio.
+   aspect ratio. The compactness value prefers more circular objects for smaller values.
 
 OPTIONS:
-   --meansize "13"	Size of the region from which the local mean intensity is calculated
-   --focussize "1.8"	Size in pixel that we focus on, structures larger and smaller are blurred
-   --notinvert 		Do not invert the image (default is to invert, detect dark objects)
+   --meansize "13"   Size of the region from which the local mean intensity is calculated
+   --compactness "-2"   Filter by compactness [1..0] defined by P^2/(4 pi A) where A is area and P is perimeter
+   --focussize "1.8" Size in pixel that we focus on, structures larger and smaller are blurred
+   --notinvert    Do not invert the image (default is to invert, detect dark objects)
 ```
 
 In order to run segment1 for an input image do:
@@ -98,3 +100,15 @@ i: 328, x: 226, y: 140, s: 20, a: 2.8534
 i: 329, x: 98, y: 90, s: 12, a: 2.6567
 >  write out the found segmentation tqsrrrqt_seg.png
 ```
+
+Here an example on how to perform a segmentation on another image:
+
+```
+./talk --verbose segment1 HiResHE.jpg 25 200 4 --meansize 16 --focussize 2 --compactness 1.1
+```
+
+In this case the 'verbose' option will print out some more information about detected and estimated parameters
+of the algorithm. We look for objects that are between 30 and 150 pixel in area. The image is first corrected
+for mean intensities using a gliding mean subtraction filter of 16x16 pixel. A mexican hat sharpening filter 
+focused on a pixel size of 2 is used afterwards. The resulting corrected and focused image is used for detection
+of contiguous regions with a maximum aspect ratio of 1:4 and a maximum compactness value of 0.9 (prefers more compact objects).
