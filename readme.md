@@ -2,10 +2,11 @@ talk - Segmentation of 2D images
 ==================================
 
 Talk is a command line utility to compute regions of interest in a 2D image. It is useful if many small
-objects can be detected by a size range and an aspect ratio. As an output the list of found objects is
-printed.
+objects can be detected by a size range a maximum aspect ratio and a maximum compactness value. 
+As an output the list of found objects is printed together with a label image that highlights
+each of the found objects.
 
-You can download a compiled version of the program, or build from the source code using golang.
+You can download a compiled version of the program, or build it yourself from source using golang.
 
 * Linux
    wget https://github.com/HaukeBartsch/talk/raw/master/binary/Linux64/talk
@@ -17,7 +18,7 @@ You can download a compiled version of the program, or build from the source cod
 <img title="image after mexican hat filter focused on size range" src="tqsrrrqt_002_focus.png"></img>
 <img title="output image with segmented regions (in color)" src="tqsrrrqt_seg.png"></img>
 
-Help:
+Program Help:
 
 ```
 NAME:
@@ -47,8 +48,8 @@ GLOBAL OPTIONS:
    --version, -v	print the version
 ```
 
-Example
---------
+Command line examples
+----------------------
 
 The segment1 command will normalize the image and sharpen it using a mexican hat filter. Region growing is executed at different threshold levels and for each threshold value a region growing will extract objects that are filtered by min/max size and aspect ratio.
 
@@ -76,7 +77,8 @@ OPTIONS:
    --notinvert    Do not invert the image (default is to invert, detect dark objects)
 ```
 
-In order to run segment1 for an input image do:
+In order to run the program call talk with the name of the image, the size range of the objects (in pixel) and the 
+maximum allowed aspect ratio of the objects.
 
 ```
 ./talk --verbose segment1 tqsrrrqt.jpg 10 28 3
@@ -101,14 +103,12 @@ i: 329, x: 98, y: 90, s: 12, a: 2.6567
 >  write out the found segmentation tqsrrrqt_seg.png
 ```
 
-Here an example on how to perform a segmentation on another image:
+Here an example on how to perform a segmentation using more of the available options:
 
 ```
 ./talk --verbose segment1 HiResHE.jpg 25 200 4 --meansize 16 --focussize 2 --compactness 1.1
 ```
 
-In this case the 'verbose' option will print out some more information about detected and estimated parameters
-of the algorithm. We look for objects that are between 30 and 150 pixel in area. The image is first corrected
-for mean intensities using a gliding mean subtraction filter of 16x16 pixel. A mexican hat sharpening filter 
-focused on a pixel size of 2 is used afterwards. The resulting corrected and focused image is used for detection
-of contiguous regions with a maximum aspect ratio of 1:4 and a maximum compactness value of 0.9 (prefers more compact objects).
+In this case the 'verbose' option will print out information about detected and estimated parameters
+of the algorithm. We look for objects that have an area of between 30 and 150 pixel. To remove uneven illumination the image intensities will be corrected using a gliding mean subtraction filter of 16x16 pixel. A mexican hat sharpening filter focused on a pixel size of 2 is used afterwards. The resulting image is used for detection
+of contiguous regions with a maximum aspect ratio of 1:4 and a maximum compactness value of 1.1 which filters out objects that are not compact enough.
